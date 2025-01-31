@@ -18,10 +18,9 @@ fi
 if [ ! -e $ROOTFS_DIR/.installed ]; then
   echo "#######################################################################################"
   echo "#"
-  echo "#                                      Foxytoux INSTALLER"
+  echo "#                                      GabrielCriste INSTALLER"
   echo "#"
-  echo "#                           Copyright (C) 2024, RecodeStudios.Cloud"
-  echo "#"
+  echo "#                           Copyright (C) 2024, GabrielCriste"
   echo "#"
   echo "#######################################################################################"
 
@@ -40,12 +39,14 @@ case $install_ubuntu in
 esac
 
 if [ ! -e $ROOTFS_DIR/.installed ]; then
-  mkdir $ROOTFS_DIR/usr/local/bin -p
-  wget --tries=$max_retries --timeout=$timeout --no-hsts -O $ROOTFS_DIR/usr/local/bin/proot "https://raw.githubusercontent.com/foxytouxxx/freeroot/main/proot-${ARCH}"
+  mkdir -p $ROOTFS_DIR/usr/local/bin
+  wget --tries=$max_retries --timeout=$timeout --no-hsts -O $ROOTFS_DIR/usr/local/bin/proot \
+    "https://raw.githubusercontent.com/GabrielCriste/jupyter/main/proot-${ARCH}"
 
   while [ ! -s "$ROOTFS_DIR/usr/local/bin/proot" ]; do
-    rm $ROOTFS_DIR/usr/local/bin/proot -rf
-    wget --tries=$max_retries --timeout=$timeout --no-hsts -O $ROOTFS_DIR/usr/local/bin/proot "https://raw.githubusercontent.com/foxytouxxx/freeroot/main/proot-${ARCH}"
+    rm -rf $ROOTFS_DIR/usr/local/bin/proot
+    wget --tries=$max_retries --timeout=$timeout --no-hsts -O $ROOTFS_DIR/usr/local/bin/proot \
+      "https://raw.githubusercontent.com/GabrielCriste/jupyter/main/proot-${ARCH}"
 
     if [ -s "$ROOTFS_DIR/usr/local/bin/proot" ]; then
       chmod 755 $ROOTFS_DIR/usr/local/bin/proot
@@ -67,7 +68,6 @@ fi
 
 CYAN='\e[0;36m'
 WHITE='\e[0;37m'
-
 RESET_COLOR='\e[0m'
 
 display_gg() {
@@ -84,3 +84,4 @@ display_gg
 $ROOTFS_DIR/usr/local/bin/proot \
   --rootfs="${ROOTFS_DIR}" \
   -0 -w "/root" -b /dev -b /sys -b /proc -b /etc/resolv.conf --kill-on-exit
+  
