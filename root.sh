@@ -2,8 +2,8 @@
 
 ROOTFS_DIR=$(pwd)
 export PATH=$PATH:~/.local/usr/bin
-max_retries=50
-timeout=1
+max_retries=10  # Reduzindo tentativas
+timeout=5        # Aumentando timeout
 ARCH=$(uname -m)
 
 if [ "$ARCH" = "x86_64" ]; then
@@ -11,32 +11,16 @@ if [ "$ARCH" = "x86_64" ]; then
 elif [ "$ARCH" = "aarch64" ]; then
   ARCH_ALT=arm64
 else
-  printf "Unsupported CPU architecture: ${ARCH}"
+  printf "Unsupported CPU architecture: ${ARCH}\n"
   exit 1
 fi
 
 if [ ! -e $ROOTFS_DIR/.installed ]; then
-  echo "#######################################################################################"
-  echo "#"
-  echo "#                                      GabrielCriste INSTALLER"
-  echo "#"
-  echo "#                           Copyright (C) 2024, GabrielCriste"
-  echo "#"
-  echo "#######################################################################################"
-
-  read -p "Do you want to install Ubuntu? (YES/no): " install_ubuntu
+  echo "Instalando Ubuntu..."
+  wget --tries=$max_retries --timeout=$timeout --no-hsts -O /tmp/rootfs.tar.gz \
+    "http://cdimage.ubuntu.com/ubuntu-base/releases/20.04/release/ubuntu-base-20.04.4-base-${ARCH_ALT}.tar.gz"
+  tar -xf /tmp/rootfs.tar.gz -C $ROOTFS_DIR
 fi
-
-case $install_ubuntu in
-  [yY][eE][sS])
-    wget --tries=$max_retries --timeout=$timeout --no-hsts -O /tmp/rootfs.tar.gz \
-      "http://cdimage.ubuntu.com/ubuntu-base/releases/20.04/release/ubuntu-base-20.04.4-base-${ARCH_ALT}.tar.gz"
-    tar -xf /tmp/rootfs.tar.gz -C $ROOTFS_DIR
-    ;;
-  *)
-    echo "Skipping Ubuntu installation."
-    ;;
-esac
 
 if [ ! -e $ROOTFS_DIR/.installed ]; then
   mkdir -p $ROOTFS_DIR/usr/local/bin
@@ -44,6 +28,7 @@ if [ ! -e $ROOTFS_DIR/.installed ]; then
     "https://raw.githubusercontent.com/GabrielCriste/jupyter/main/proot-${ARCH}"
 
   while [ ! -s "$ROOTFS_DIR/usr/local/bin/proot" ]; do
+    echo "Erro no download, tentando novamente..."
     rm -rf $ROOTFS_DIR/usr/local/bin/proot
     wget --tries=$max_retries --timeout=$timeout --no-hsts -O $ROOTFS_DIR/usr/local/bin/proot \
       "https://raw.githubusercontent.com/GabrielCriste/jupyter/main/proot-${ARCH}"
@@ -53,31 +38,20 @@ if [ ! -e $ROOTFS_DIR/.installed ]; then
       break
     fi
 
-    chmod 755 $ROOTFS_DIR/usr/local/bin/proot
-    sleep 1
+    sleep 2
   done
 
   chmod 755 $ROOTFS_DIR/usr/local/bin/proot
 fi
 
 if [ ! -e $ROOTFS_DIR/.installed ]; then
-  printf "nameserver 1.1.1.1\nnameserver 1.0.0.1" > ${ROOTFS_DIR}/etc/resolv.conf
+  echo "Configurando DNS..."
+  echo -e "nameserver 1.1.1.1\nnameserver 1.0.0.1" > ${ROOTFS_DIR}/etc/resolv.conf
   rm -rf /tmp/rootfs.tar.xz /tmp/sbin
   touch $ROOTFS_DIR/.installed
 fi
 
-CYAN='\e[0;36m'
-WHITE='\e[0;37m'
-RESET_COLOR='\e[0m'
-
-display_gg() {
-  echo -e "${WHITE}___________________________________________________${RESET_COLOR}"
-  echo -e ""
-  echo -e "           ${CYAN}-----> Mission Completed ! <----${RESET_COLOR}"
-}
-
-clear
-display_gg
+echo "-----> Instalação Concluída! <-----"
 
 $ROOTFS_DIR/usr/local/bin/proot \
   --rootfs="${ROOTFS_DIR}" \
